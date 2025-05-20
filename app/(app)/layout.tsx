@@ -1,6 +1,5 @@
 import { Inter } from "next/font/google";
-import { Toaster } from "react-hot-toast";
-import "./globals.css";
+import Sidebar from "@/components/Sidebar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
-        <Toaster position="top-right" />
+        <div className="flex">
+          <Sidebar active="Dashboard" />
+          <div className="flex-grow">{children}</div>
+        </div>
       </body>
     </html>
   );

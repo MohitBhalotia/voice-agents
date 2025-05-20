@@ -10,7 +10,9 @@ export async function middleware(req: NextRequest) {
   try {
     await verifyToken(token);
     return NextResponse.next();
-  } catch (e) {    
+  } catch (e) { 
+    console.log(e);
+       
     return NextResponse.redirect(new URL('/login', req.url));
   }
 }
