@@ -48,7 +48,8 @@ export async function POST(req: Request) {
     await sendVerificationEmail(email, verification_token);
 
     return NextResponse.json({
-      message: "User registered. Check your email to verify.",
+      status: 201,
+      message: "Account created successfully. Check your email to verify.",
     });
   } catch (error) {
     console.log(error);

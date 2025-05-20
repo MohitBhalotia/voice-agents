@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
     await sendResetPasswordEmail(email, resetToken);
 
-    return NextResponse.json({ message: 'Reset link sent to your email' });
+    return NextResponse.json({ message: 'Reset link sent to your email successfully.' });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

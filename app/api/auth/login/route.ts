@@ -46,20 +46,14 @@ export async function POST(req: Request) {
       );
     }
     // Sign JWT token
-    const token = signToken({ id: user.id, email: user.email });
+    const token = await signToken({ id: user.id, email: user.email });
     await prisma.user.update({
       where: { id: user.id },
       data: { last_login_at: new Date() },
     });
 
     // Create NextResponse and set cookie
-    const res = new NextResponse(
-      JSON.stringify({ message: "Login successful" }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    const res = NextResponse.json({ message: "Login successful", status: 200 });
 
     res.cookies.set("token", token, {
       httpOnly: true,
