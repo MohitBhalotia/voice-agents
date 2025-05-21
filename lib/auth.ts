@@ -8,7 +8,8 @@ export async function signToken(payload: JWTPayload) {
     .sign(secret);
 }
 
-export async function verifyToken(token: string) {
+export async function verifyJWTToken(token: string) {  
+  
   const { payload } = await jwtVerify(token, secret);
   return payload;
 }

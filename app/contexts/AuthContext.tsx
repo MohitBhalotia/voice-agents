@@ -7,9 +7,8 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { jwtVerify } from "jose"; // ✅ use jwtVerify instead of jwtDecrypt
 import { getCookies } from "@/utils/getCookies";
-
+import { verifyJWTToken } from "@/lib/auth";
 interface User {
   id: string;
   email: string;
@@ -45,11 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const secret = new TextEncoder().encode(
-          process.env.NEXT_PUBLIC_JWT_SECRET
-        ); 
-
-        const { payload } = await jwtVerify(token, secret);
+        const payload=await verifyJWTToken(token);
 
         setUser({
           id: payload.id as string,
