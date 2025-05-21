@@ -24,7 +24,6 @@ export default function LoginPage() {
         credentials: "include",
       });
       const data = await res.json();
-      console.log(data.status);
       
       if (data.status === 200) {        
         router.push("/dashboard");

@@ -52,7 +52,6 @@ export async function POST(req: Request) {
       message: "Account created successfully. Check your email to verify.",
     });
   } catch (error) {
-    console.log(error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors.map((e) => e.message).join(", ") },
