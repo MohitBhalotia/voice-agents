@@ -9,16 +9,17 @@ import {
   ClockIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
+import { useAuth } from "@/app/contexts/AuthContext";
 
 interface Agent {
   id: string;
   name: string;
   description: string;
-  status: "active" | "inactive";
+  isActive: Boolean;
   createdAt: string;
-  lastActive?: string;
-  totalInteractions?: number;
-  successRate?: number;
+  // lastActive?: string;
+  // totalInteractions?: number;
+  // successRate?: number;
 }
 
 interface DashboardStats {
@@ -29,6 +30,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const { user, loading: authloading } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,34 +48,44 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchAgents = async () => {
       try {
-        const response = await fetch("/api/agents");
-        if (!response.ok) {
+        const response = await fetch("/api/agents/my-agents", {
+          headers: {
+            "user-id": user?.id as string,
+          },
+        });
+        
+        if(response.status!==200)
+        {
           throw new Error("Failed to fetch agents");
         }
         const data = await response.json();
-        setAgents(data);
+        console.log(data);
+        
+        setAgents(data.agents);
 
         // Calculate stats
-        const activeAgents = data.filter(
-          (agent: Agent) => agent.status === "active"
+        const activeAgents = data.agents.filter(
+          (agent: Agent) => agent.isActive === true
         ).length;
-        const totalInteractions = data.reduce(
-          (sum: number, agent: Agent) => sum + (agent.totalInteractions || 0),
-          0
-        );
-        const averageSuccessRate =
-          data.length > 0
-            ? data.reduce(
-                (sum: number, agent: Agent) => sum + (agent.successRate || 0),
-                0
-              ) / data.length
-            : 0;
+        
+        // const totalInteractions = data.reduce(
+        //   (sum: number, agent: Agent) => sum + (agent.totalInteractions || 0),
+        //   0
+        // );
+        // const averageSuccessRate =
+        //   data.length > 0
+        //     ? data.reduce(
+        //         (sum: number, agent: Agent) => sum + (agent.successRate || 0),
+        //         0
+        //       ) / data.length
+        //     : 0;
 
         setStats({
-          totalAgents: data.length,
+          totalAgents: data.agents.length,
           activeAgents,
-          totalInteractions,
-          averageSuccessRate,
+          // TODO: Add total interactions and average success rate
+          totalInteractions: 0,
+          averageSuccessRate: 0,
         });
       } catch (error) {
         setError("Failed to load agents. Please try again later.");
@@ -83,16 +95,19 @@ export default function DashboardPage() {
     };
 
     fetchAgents();
-  }, []);
+  }, [user]);
 
-  const filteredAgents = agents.filter((agent) => {
-    const matchesSearch =
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || agent.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  let filteredAgents: Agent[] =[];
+  if (agents.length > 0) {
+    filteredAgents = agents.filter((agent) => {
+      const matchesSearch =
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" || agent.isActive === (statusFilter === "active");
+      return matchesSearch && matchesStatus;
+    });
+  }
 
   if (loading) {
     return (
@@ -307,12 +322,12 @@ export default function DashboardPage() {
                         </h3>
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                            agent.status === "active"
+                            agent.isActive === true
                               ? "bg-green-900 text-green-300"
                               : "bg-gray-700 text-gray-400"
                           }`}
                         >
-                          {agent.status}
+                          {agent.isActive ? "Active" : "Inactive"}
                         </span>
                       </div>
                       <p className="mt-2 text-base text-gray-400">
