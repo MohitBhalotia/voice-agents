@@ -3,7 +3,6 @@ import { verifyToken } from './lib/auth';
 
 export async function middleware(req: NextRequest) {
   const token = req.cookies.get('token')?.value;
-  console.log(token);
   
   if (!token) return NextResponse.redirect(new URL('/login', req.url));
 
@@ -11,7 +10,6 @@ export async function middleware(req: NextRequest) {
     await verifyToken(token);
     return NextResponse.next();
   } catch (e) { 
-    console.log(e);
        
     return NextResponse.redirect(new URL('/login', req.url));
   }
