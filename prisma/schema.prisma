@@ -12,11 +12,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum llm_model {
+  OPENAI_GPT_4O_MINI @map("openai gpt 4o mini")
+  CLAUDE3_HAIKU      @map("anthropic claude-3 haiku")
+}
+
+enum source_type {
+  PDF
+  TXT
+  CSV
+  DOCX
+  URL
+}
+
+enum status {
+  PENDING
+  PROCESSING
+  ACTIVE
+  ERROR
+}
+
 model User {
   id                     String    @id @default(uuid())
   email                  String    @unique
   passwordHash           String
-  fullName               String  
+  fullName               String
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   last_login_at          DateTime?
@@ -27,6 +47,9 @@ model User {
   Agent                  Agent[]
 }
 
+// TODO: Workspaces
+// TODO: Workspace memebers
+
 model Agent {
   id               String              @id @default(uuid())
   userId           String
@@ -34,30 +57,64 @@ model Agent {
   templateId       String?
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
+  isActive         Boolean             @default(true)
   user             User                @relation(fields: [userId], references: [id])
   configuration    AgentConfiguration?
   knowledgeSources KnowledgeSource[]
   callLogs         CallLog[]
 }
 
+// TODO: Agent templates
+
 model AgentConfiguration {
-  id           String @id @default(uuid())
-  agentId      String @unique
-  llmModel     String
-  systemPrompt String
-  firstMessage String
-  temperature  Float
-  voiceId      String
-  agent        Agent  @relation(fields: [agentId], references: [id])
+  id                                String    @id @default(uuid())
+  agentId                           String    @unique
+  agent_language                    String
+  firstMessage                      String
+  systemPrompt                      String
+  llmModel                          llm_model @default(OPENAI_GPT_4O_MINI)
+  temperature                       Float     @default(0.7)
+  tokenLimit                        Int       @default(4096)
+  use_rag                           Boolean   @default(false)
+  voiceId                           String
+  use_flash_call                    Boolean   @default(false)
+  tts_output_format                 String    @default("mp3")
+  optimize_streaming_latency        Boolean   @default(false)
+  voice_stability                   Float
+  voice_speed                       Float
+  voice_similarity_boost            Float
+  fetch_initiation_webhook_url      String
+  post_call_webhook_url             String
+  concurrent_calls_limit            Int
+  daily_calls_limit                 Int
+  turn_timeout_seconds              Int
+  silence_end_call_timeout_seconds  Int
+  max_conversation_duration_seconds Int
+  user_input_audio_format           String
+  store_call_audio                  Boolean   @default(true)
+  zero_pii_retention                Boolean   @default(false)
+  conversation_retention_days       Int       @default(30)
+  enable_auth_for_agent_api         Boolean   @default(false)
+  update_at                         DateTime  @updatedAt
+  agent                             Agent     @relation(fields: [agentId], references: [id])
 }
 
+// TODO: Agent variables
+
+// TODO: Pronounciation dictionary entries
+
 model KnowledgeSource {
-  id          String   @id @default(uuid())
-  agentId     String
-  sourceType  String // 'pdf' or 'txt'
-  storagePath String
-  createdAt   DateTime @default(now())
-  agent       Agent    @relation(fields: [agentId], references: [id])
+  id               String      @id @default(uuid())
+  agentId          String
+  name             String
+  sourceType       source_type
+  originalFileName String
+  storagePath      String
+  status           status
+  uploaded_at      DateTime    @default(now())
+  last_indexed_at  DateTime?
+  metadata         Json?
+  agent            Agent       @relation(fields: [agentId], references: [id])
 }
 
 model CallLog {
