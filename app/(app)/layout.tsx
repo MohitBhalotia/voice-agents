@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
-import Sidebar from "@/components/Sidebar";
+import SidebarWrapper from "@/components/SidebarWrapper";
 import { AuthProvider } from "../contexts/AuthContext";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -17,7 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <div className="flex">
-          <Sidebar active="Dashboard" />
+          <SidebarWrapper />
           <div className="flex-grow">
             <AuthProvider>{children}</AuthProvider>
           </div>

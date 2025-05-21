@@ -10,7 +10,12 @@ interface Agent {
   id: string;
   name: string;
   createdAt: string;
-  
+  configuration: {
+    agent_language: string;
+    firstMessage: string;
+    systemPrompt: string;
+    llmModel: string;
+  };
 }
 
 const MyAgentsPage = () => {
@@ -139,6 +144,7 @@ const MyAgentsPage = () => {
                         Created {new Date(agent.createdAt).toLocaleDateString()}
                       </p>
                     </div>
+                    {agent.configuration && <div>Configured</div>}
                     <button
                       onClick={() => router.push(`/agents/${agent.id}`)}
                       className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-800 transition-colors"
@@ -146,8 +152,6 @@ const MyAgentsPage = () => {
                       <Settings className="h-5 w-5" />
                     </button>
                   </div>
-
-                  
 
                   <div className="flex space-x-2">
                     <button

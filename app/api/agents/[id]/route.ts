@@ -47,7 +47,8 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const validatedData = configureAgentSchema.parse(body);
-
+    console.log(validatedData);
+    
     // Check if agent exists and belongs to the user
     const agent = await prisma.agent.findFirst({
       where: {
