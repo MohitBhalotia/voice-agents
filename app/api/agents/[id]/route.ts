@@ -3,14 +3,15 @@ import { z } from "zod";
 // import { getCookies } from "@/utils/getCookies";
 import prisma from "@/lib/prisma";
 import { llm_model } from "@prisma/client";
+import { agent_language } from "@prisma/client";
 
 // Create the validation schema
 const configureAgentSchema = z.object({
   userId: z.string().uuid(),
   agentId: z.string().uuid(),
-  agent_language: z.string().min(1),
+  agent_language: z.nativeEnum(agent_language).default(agent_language.EN),
   firstMessage: z.string().min(1),
-  systemPrompt: z.string().min(1),
+  systemPrompt: z.string().min(10),
   llmModel: z.nativeEnum(llm_model).default(llm_model.OPENAI_GPT_4O_MINI),
   temperature: z.number().min(0).max(1).default(0.7),
   tokenLimit: z.number().int().positive().default(4096),
@@ -22,8 +23,8 @@ const configureAgentSchema = z.object({
   voice_stability: z.number().min(0).max(1),
   voice_speed: z.number().min(0.5).max(2),
   voice_similarity_boost: z.number().min(0).max(1),
-  fetch_initiation_webhook_url: z.string().url(),
-  post_call_webhook_url: z.string().url(),
+  fetch_initiation_webhook_url: z.string().optional(),
+  post_call_webhook_url: z.string().optional(),
   concurrent_calls_limit: z.number().int().positive(),
   daily_calls_limit: z.number().int().positive(),
   turn_timeout_seconds: z.number().int().positive(),
@@ -44,6 +45,7 @@ export async function POST(req: Request) {
     // }
 
     const body = await req.json();
+
     const validatedData = configureAgentSchema.parse(body);
 
     // Check if agent exists and belongs to the user
@@ -74,12 +76,16 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({
-      message: "Agent configuration updated successfully",
-    //   configuration,
-    });
+    return NextResponse.json(
+      {
+        message: "Agent configuration updated successfully",
+      },
+      { status: 200 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.log(error.errors);
+
       return NextResponse.json(
         { error: "Validation error", details: error.errors },
         { status: 400 }

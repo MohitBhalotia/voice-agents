@@ -28,9 +28,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       agentId: agent.id,
-      redirectUrl: `/agents/${agent.id}/configure`,
+      redirectUrl: `/agents/${agent.id}`,
     });
   } catch (error) {
+    // console.log(error);
+    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors.map((e) => e.message).join(", ") },
