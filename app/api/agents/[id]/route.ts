@@ -4,7 +4,7 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { llm_model } from "@prisma/client";
 import { agent_language } from "@prisma/client";
-
+import axios from "axios";
 // Create the validation schema
 const configureAgentSchema = z.object({
   userId: z.string().uuid(),
@@ -47,7 +47,6 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const validatedData = configureAgentSchema.parse(body);
-    console.log(validatedData);
     
     // Check if agent exists and belongs to the user
     const agent = await prisma.agent.findFirst({
@@ -77,9 +76,13 @@ export async function POST(req: Request) {
       },
     });
 
+    const response = await axios.post(
+      `http://localhost:3000/api/agents/${agentId}/build-agent`,configuration
+    );
     return NextResponse.json(
       {
         message: "Agent configuration updated successfully",
+        
       },
       { status: 200 }
     );
