@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const validatedData = configureAgentSchema.parse(body);
-    
+
     // Check if agent exists and belongs to the user
     const agent = await prisma.agent.findFirst({
       where: {
@@ -65,7 +65,6 @@ export async function POST(req: Request) {
 
     // Create or update agent configuration
     const { userId, agentId, ...updatableFields } = validatedData;
-    console.log(updatableFields);
 
     const configuration = await prisma.agentConfiguration.upsert({
       where: { agentId },
@@ -77,12 +76,14 @@ export async function POST(req: Request) {
     });
 
     const response = await axios.post(
-      `http://localhost:3000/api/agents/${agentId}/build-agent`,configuration
+      `http://localhost:3000/api/agents/${agentId}/build-agent`,
+      { configuration }
     );
+    const data = response.data;
+    console.log(data);
     return NextResponse.json(
       {
         message: "Agent configuration updated successfully",
-        
       },
       { status: 200 }
     );
