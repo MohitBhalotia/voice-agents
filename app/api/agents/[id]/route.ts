@@ -5,6 +5,9 @@ import prisma from "@/lib/prisma";
 import { llm_model } from "@prisma/client";
 import { agent_language } from "@prisma/client";
 import axios from "axios";
+import { getCookies } from "@/utils/getCookies";
+import { verifyJWTToken } from "@/lib/auth";
+import { buildDeepgramPayload } from "@/utils/buildPayload";
 // Create the validation schema
 const configureAgentSchema = z.object({
   userId: z.string().uuid(),
@@ -75,12 +78,12 @@ export async function POST(req: Request) {
       },
     });
 
-    const response = await axios.post(
-      `http://localhost:3000/api/agents/${agentId}/build-agent`,
-      { configuration }
-    );
-    const data = response.data;
-    console.log(data);
+    // const response = await axios.post(
+    //   `http://localhost:3000/api/agents/${agentId}/build-agent`,
+    //   { configuration }
+    // );
+    // const data = response.data;
+    // console.log(data);
     return NextResponse.json(
       {
         message: "Agent configuration updated successfully",
@@ -105,57 +108,59 @@ export async function POST(req: Request) {
   }
 }
 
-// export async function GET(req: Request) {
-//   try {
-//     const token = await getCookies();
-//     if (!token) {
-//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//     }
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // const token = await getCookies();
+    // if (!token) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // }
+    // const payload = await verifyJWTToken(token);
+    const agentId = await params.id;
 
-//     const { searchParams } = new URL(req.url);
-//     const agentId = searchParams.get("agentId");
+    if (!agentId) {
+      return NextResponse.json(
+        { error: "Agent ID is required" },
+        { status: 400 }
+      );
+    }
+    
+    // Check if agent exists and belongs to the user
+    const agent = await prisma.agent.findFirst({
+      where: {
+        id: agentId,
+        // userId: payload.id as string, // Assuming token contains userId
+      },
+    });
 
-//     if (!agentId) {
-//       return NextResponse.json(
-//         { error: "Agent ID is required" },
-//         { status: 400 }
-//       );
-//     }
+    if (!agent) {
+      return NextResponse.json(
+        { error: "Agent not found or unauthorized" },
+        { status: 404 }
+      );
+    }
 
-//     // Check if agent exists and belongs to the user
-//     const agent = await prisma.agent.findFirst({
-//       where: {
-//         id: agentId,
-//         userId: token, // Assuming token contains userId
-//       },
-//     });
+    const configuration = await prisma.agentConfiguration.findUnique({
+      where: {
+        agentId: agentId,
+      },
+    });
 
-//     if (!agent) {
-//       return NextResponse.json(
-//         { error: "Agent not found or unauthorized" },
-//         { status: 404 }
-//       );
-//     }
-
-//     const configuration = await prisma.agentConfiguration.findUnique({
-//       where: {
-//         agentId: agentId,
-//       },
-//     });
-
-//     if (!configuration) {
-//       return NextResponse.json(
-//         { error: "Configuration not found" },
-//         { status: 404 }
-//       );
-//     }
-
-//     return NextResponse.json({ configuration });
-//   } catch (error) {
-//     console.error("Error fetching agent configuration:", error);
-//     return NextResponse.json(
-//       { error: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// }
+    if (!configuration) {
+      return NextResponse.json(
+        { error: "Configuration not found" },
+        { status: 404 }
+      );
+    }
+    const config=buildDeepgramPayload(configuration)
+    return NextResponse.json( config );
+  } catch (error) {
+    console.error("Error fetching agent configuration:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

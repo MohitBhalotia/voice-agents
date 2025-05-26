@@ -1,159 +1,220 @@
-import { buildDeepgramPayload } from "@/utils/buildPayload";
+// import { buildDeepgramPayload } from "@/utils/buildPayload";
+// import { WebSocket, WebSocketServer } from "ws";
+// import http from "http";
+// import { NextResponse } from "next/server";
 
-import { WebSocket, WebSocketServer } from "ws";
-import http from "http";
-import { NextResponse } from "next/server";
+// // Constants
+// const BUFFER_SIZE = 20 * 160; // 0.4s of audio
+// const PORT = 6000;
 
-// Constants
-const BUFFER_SIZE = 20 * 160; // 0.4s of audio
-const PORT = 6000;
+// const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
+// if (!DEEPGRAM_API_KEY) {
+//   throw new Error("DEEPGRAM_API_KEY environment variable is not set");
+// }
 
-const DEEPGRAM_API_KEY = process.env.DEEPGRAM_API_KEY;
-if (!DEEPGRAM_API_KEY) {
-  throw new Error("DEEPGRAM_API_KEY environment variable is not set");
-}
+// // Singleton server instance
+// let server: http.Server | null = null;
+// let wss: WebSocketServer | null = null;
 
-export async function POST(req: Request) {
-  const { configuration } = await req.json();
+// function connectToSTS(): Promise<WebSocket> {
+//   return new Promise((resolve, reject) => {
+//     const sts_ws = new WebSocket("wss://agent.deepgram.com/v1/agent/converse", [
+//       "token",
+//       DEEPGRAM_API_KEY!,
+//     ]);
 
-  // Create HTTP server
-  const server = http.createServer();
-  // WebSocket Server
-  const wss = new WebSocketServer({ server });
+//     sts_ws.on("open", () => resolve(sts_ws));
+//     sts_ws.on("error", reject);
+//   });
+// }
 
-  console.log(`WebSocket server started at ws://localhost:${PORT}`);
+// async function handleTwilio(twilio_ws: WebSocket) {
+//   const audioQueue: Buffer[] = [];
+//   const streamsidQueue: string[] = [];
 
-  wss.on("connection", (twilio_ws, req) => {
-    console.log(twilio_ws);
-    console.log(req);
-    const path = req.url;
+//   try {
+//     const sts_ws = await connectToSTS();
+//     console.log("Connected to STS");
 
-    console.log(`Incoming connection on path: ${path}`);
-    const config = buildDeepgramPayload(configuration);
-    if (path === "/twilio") {
-      handleTwilio(twilio_ws, config);
-    }
-  });
+//     // Send config
+//     const configMessage = {
+//       type: "Settings",
+//       audio: {
+//         input: {
+//           encoding: "mulaw",
+//           sample_rate: 8000,
+//         },
+//         output: {
+//           encoding: "mulaw",
+//           sample_rate: 8000,
+//           container: "none",
+//         },
+//       },
+//       agent: {
+//         language: "en",
+//         listen: {
+//           provider: {
+//             type: "deepgram",
+//             model: "nova-3",
+//             keyterms: ["hello", "goodbye"],
+//           },
+//         },
+//         think: {
+//           provider: {
+//             type: "open_ai",
+//             model: "gpt-4o-mini",
+//             temperature: 0.7,
+//           },
+//           prompt: "You are a helpful AI assistant focused on customer service.",
+//         },
+//         speak: {
+//           provider: {
+//             type: "deepgram",
+//             model: "aura-2-thalia-en",
+//           },
+//         },
+//         greeting: "Hello! How can I help you today?",
+//       },
+//     };
 
-  // Start the server
-  server.listen(PORT);
+//     sts_ws.send(JSON.stringify(configMessage));
+//     console.log("Sent config to STS");
 
-  // Return immediately
-  return NextResponse.json({
-    message: "WebSocket server started",
-    wsUrl: `ws://localhost:${PORT}`,
-    status: 200,
-  });
-}
+//     // Buffer for inbound audio
+//     let inbuffer = Buffer.alloc(0);
 
-function connectToSTS(): Promise<WebSocket> {
-  return new Promise((resolve, reject) => {
-    const sts_ws = new WebSocket("wss://agent.deepgram.com/v1/agent/converse", [
-      "token",
-      DEEPGRAM_API_KEY!,
-    ]);
-    console.log(sts_ws);
-    
+//     // Handle Twilio messages
+//     twilio_ws.on("message", async (data) => {
+//       try {
+//         const message = JSON.parse(data.toString());
+//         console.log("Received Twilio message:", message.event);
 
-    sts_ws.on("open", () => resolve(sts_ws));
-    sts_ws.on("error", reject);
-  });
-}
+//         switch (message.event) {
+//           case "start":
+//             const streamSid = message.start.streamSid;
+//             console.log("Got stream SID:", streamSid);
+//             streamsidQueue.push(streamSid);
+//             break;
 
-async function handleTwilio(twilio_ws: WebSocket, config: any) {
-  const audioQueue = [];
-  const streamsidQueue: string[] = [];
+//           case "media":
+//             if (message.media.track === "inbound") {
+//               const audioChunk = Buffer.from(message.media.payload, "base64");
+//               inbuffer = Buffer.concat([inbuffer, audioChunk]);
 
-  const sts_ws = await connectToSTS();
+//               while (inbuffer.length >= BUFFER_SIZE) {
+//                 const chunk = inbuffer.slice(0, BUFFER_SIZE);
+//                 inbuffer = inbuffer.slice(BUFFER_SIZE);
+//                 audioQueue.push(chunk);
+//                 sts_ws.send(chunk);
+//               }
+//             }
+//             break;
 
-  // Send config
+//           case "stop":
+//             console.log("Stream stopped");
+//             twilio_ws.close();
+//             break;
+//         }
+//       } catch (err) {
+//         console.error("Error processing Twilio message:", err);
+//       }
+//     });
 
-  sts_ws.send(JSON.stringify(config));
+//     // Handle STS messages
+//     sts_ws.on("message", async (message) => {
+//       try {
+//         const streamSid = streamsidQueue[0];
+//         if (typeof message === "string") {
+//           const decoded = JSON.parse(message);
+//           console.log("Received STS message:", decoded);
 
-  // Buffer for inbound audio
-  let inbuffer = Buffer.alloc(0);
+//           if (decoded.type === "UserStartedSpeaking") {
+//             const clearMessage = {
+//               event: "clear",
+//               streamSid: streamSid,
+//             };
+//             twilio_ws.send(JSON.stringify(clearMessage));
+//           }
+//           return;
+//         }
 
-  twilio_ws.on("message", async (data) => {
-    try {
-      const message = JSON.parse(data.toString());
+//         // Binary - TTS audio
+//         const payload = Buffer.from(message as Buffer).toString("base64");
+//         const mediaMessage = {
+//           event: "media",
+//           streamSid: streamSid,
+//           media: {
+//             payload: payload,
+//           },
+//         };
+//         twilio_ws.send(JSON.stringify(mediaMessage));
+//       } catch (err) {
+//         console.error("Error processing STS message:", err);
+//       }
+//     });
 
-      switch (message.event) {
-        case "start":
-          const streamSid = message.start.streamSid;
-          streamsidQueue.push(streamSid);
-          break;
+//     twilio_ws.on("close", () => {
+//       console.log("Twilio connection closed");
+//       sts_ws.close();
+//     });
 
-        case "media":
-          if (message.media.track === "inbound") {
-            const audioChunk = Buffer.from(message.media.payload, "base64");
-            inbuffer = Buffer.concat([inbuffer, audioChunk]);
+//     sts_ws.on("close", () => {
+//       console.log("STS connection closed");
+//     });
+//   } catch (error) {
+//     console.error("Error in handleTwilio:", error);
+//   }
+// }
 
-            while (inbuffer.length >= BUFFER_SIZE) {
-              const chunk = inbuffer.slice(0, BUFFER_SIZE);
-              inbuffer = inbuffer.slice(BUFFER_SIZE);
-              audioQueue.push(chunk);
-              sts_ws.send(chunk);
-            }
-          }
-          break;
+// function getOrCreateServer() {
+//   if (!server) {
+//     console.log("Creating new WebSocket server...");
+//     server = http.createServer();
+//     wss = new WebSocketServer({ server });
 
-        case "stop":
-          console.log("Stopping session...");
-          twilio_ws.close();
-          break;
-      }
-    } catch (err) {
-      console.error(
-        "Twilio parse error:",
-        err instanceof Error ? err.message : String(err)
-      );
-    }
-  });
+//     wss.on("connection", (ws, req) => {
+//       const path = req.url;
+//       console.log(`New connection on path: ${path}`);
 
-  sts_ws.on("message", async (message) => {
-    try {
-      const streamSid = streamsidQueue[0];
-      if (typeof message === "string") {
-        const decoded = JSON.parse(message);
+//       if (path === "/twilio") {
+//         console.log("Starting Twilio handler");
+//         handleTwilio(ws);
+//       }
+//     });
 
-        if (decoded.type === "UserStartedSpeaking") {
-          const clearMessage = {
-            event: "clear",
-            streamSid: streamSid,
-          };
-          twilio_ws.send(JSON.stringify(clearMessage));
-        }
+//     server.listen(PORT, () => {
+//       console.log(`WebSocket server started at ws://localhost:${PORT}`);
+//     });
 
-        console.log("[STS MSG]", decoded);
-        return;
-      }
+//     server.on("error", (error) => {
+//       console.error("Server error:", error);
+//       if ((error as any).code === "EADDRINUSE") {
+//         console.error(`Port ${PORT} is already in use`);
+//       }
+//     });
+//   }
+//   return { server, wss };
+// }
 
-      // Binary - TTS audio
-      const payload = Buffer.from(Buffer.from(message as Buffer)).toString(
-        "base64"
-      );
-      const mediaMessage = {
-        event: "media",
-        streamSid: streamSid,
-        media: {
-          payload: payload,
-        },
-      };
-      twilio_ws.send(JSON.stringify(mediaMessage));
-    } catch (err) {
-      console.error(
-        "STS parse error:",
-        err instanceof Error ? err.message : String(err)
-      );
-    }
-  });
+// export async function POST(req: Request) {
+//   try {
+//     const { configuration } = await req.json();
+//     const { server, wss } = getOrCreateServer();
 
-  twilio_ws.on("close", () => {
-    console.log("Twilio connection closed");
-    sts_ws.close();
-  });
+//     if (!server || !wss) {
+//       throw new Error("Failed to create WebSocket server");
+//     }
 
-  sts_ws.on("close", () => {
-    console.log("STS connection closed");
-  });
-}
+//     return NextResponse.json({
+//       message: "WebSocket server is running",
+//       wsUrl: `ws://localhost:${PORT}`,
+//       status: 200,
+//     });
+//   } catch (error) {
+//     console.error("Error in POST handler:", error);
+//     return NextResponse.json(
+//       { error: "Failed to start WebSocket server" },
+//       { status: 500 }
+//     );
+//   }
+// }

@@ -33,15 +33,14 @@ export const buildDeepgramPayload = (config: AgentConfiguration) => {
     type: "Settings",
     audio: {
       input: {
-        encoding: config.user_input_audio_format,
-        sample_rate: 16000,
+        encoding: "mulaw",
+        sample_rate: 8000,
       },
-    },
-    output: {
-      encoding: config.tts_output_format,
-      sample_rate: 44100,
-      bitrate: 96000,
-      container: "mp3",
+      output: {
+        encoding: "mulaw",
+        sample_rate: 8000,
+        container: "none",
+      },
     },
     agent: {
       language: config.agent_language.toLowerCase(),
@@ -49,6 +48,7 @@ export const buildDeepgramPayload = (config: AgentConfiguration) => {
         provider: {
           type: "deepgram" as const,
           model: "nova-3",
+          keyterms: ["hello", "goodbye"]
         },
       },
       think: {
