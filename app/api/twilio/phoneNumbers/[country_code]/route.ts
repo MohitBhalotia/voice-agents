@@ -10,14 +10,14 @@ export async function GET(
   );
 
   console.log(params.country_code);
-
+  
   let availablePhoneNumberLocal = await client
     .availablePhoneNumbers(params.country_code)
-    .local.list({ voiceEnabled: true });
+    .local.list({ voiceEnabled: true,limit:10 });
 
   const availablePhoneNumberTollFree = await client
     .availablePhoneNumbers(params.country_code)
-    .tollFree.list({ voiceEnabled: true });
+    .tollFree.list({ voiceEnabled: true, limit: 10 });
 
   return Response.json({
     availablePhoneNumberLocal,
