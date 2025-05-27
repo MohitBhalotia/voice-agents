@@ -9,6 +9,7 @@ import { number } from "zod";
 interface PhoneNumber {
   id: string;
   number: string;
+  friendlyName: string;
   createdAt: string;
   updatedAt: string;
   agentId: string | null;
@@ -220,9 +221,10 @@ export default function PhoneNumbersPage() {
                         <Phone className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                       </div>
                       <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                        {phone.number}
+                        {phone.friendlyName}
                       </h3>
                     </div>
+
                     <button
                       onClick={() => handleDelete(phone.id)}
                       className="text-gray-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
@@ -230,7 +232,9 @@ export default function PhoneNumbersPage() {
                       <Trash2 className="h-5 w-5" />
                     </button>
                   </div>
-
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    {phone.number}
+                  </p>
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <span className="font-medium">Added:</span>

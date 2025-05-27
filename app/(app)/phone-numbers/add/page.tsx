@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { Globe, Phone, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 interface PhoneNumber {
   friendlyName: string;
@@ -25,6 +27,7 @@ const countries = [
 ];
 
 export default function AddPhoneNumberPage() {
+  const router = useRouter();
   const [selectedCountry, setSelectedCountry] = useState("");
   const [loading, setLoading] = useState(false);
   const [localNumbers, setLocalNumbers] = useState<PhoneNumber[]>([]);
@@ -75,11 +78,11 @@ export default function AddPhoneNumberPage() {
 
       if (response.ok) {
         // Handle successful purchase
-        console.log("Number purchased successfully");
-      } else {
-        console.error("Failed to purchase number");
+        toast.success("Number purchased successfully");
+        router.push("/phone-numbers");
       }
     } catch (error) {
+      toast.error("Failed to purchase number");
       console.error("Failed to purchase number");
     }
   };

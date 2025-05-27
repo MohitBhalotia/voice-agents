@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       id: true,
       number: true,
       agentId: true,
+      friendlyName: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
     const number = data.number;
+
     const userId = req.headers.get("user_id");
 
     if (!userId) {
@@ -40,15 +42,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const response = await fetch("http://localhost:3000/api/twilio/phoneNumbers/buy-number", {
+      method: "POST",
+      body: JSON.stringify({ number }),
+      headers: {
+        "Content-Type": "application/json",
+        user_id: userId,
+      },
+    });
+    const res = await response.json();
+    console.log(res);
+
     const phoneNumber = await prisma.phoneNumber.create({
       data: {
         number,
         userId,
+        sid: res.sid,
+        friendlyName: res.friendlyName,
       },
     });
 
     return Response.json({ phoneNumber });
   } catch (error) {
+    console.log(error);
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
@@ -59,10 +75,8 @@ export async function POST(req: NextRequest) {
       );
     }
     return Response.json(
-      { error: "Failed to create phone number" },
+      { error: "Failed to create phone number", },
       { status: 500 }
     );
   }
 }
-
-
