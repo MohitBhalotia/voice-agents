@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     select: {
       id: true,
       number: true,
+      agentId: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -63,3 +64,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+

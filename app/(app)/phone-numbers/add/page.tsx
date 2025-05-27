@@ -157,7 +157,8 @@ export default function AddPhoneNumberPage() {
                           {number.phoneNumber}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {number.locality?number.locality:selectedCountry}, {number.region ? number.region : selectedCountry}
+                          {number.locality ? number.locality : selectedCountry},{" "}
+                          {number.region ? number.region : selectedCountry}
                         </p>
                       </div>
                       <button
@@ -190,14 +191,15 @@ export default function AddPhoneNumberPage() {
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
+                        <p className="font-medium text-gray-900 dark:text-white">
                           {number.friendlyName}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {number.phoneNumber}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {number.locality?number.locality:selectedCountry}, {number.region ? number.region : selectedCountry}
+                          {number.locality ? number.locality : selectedCountry},{" "}
+                          {number.region ? number.region : selectedCountry}
                         </p>
                       </div>
                       <button
