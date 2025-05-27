@@ -2,8 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider        = "prisma-client-js"
-  
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -36,18 +35,28 @@ enum status {
 }
 
 model User {
-  id                     String    @id @default(uuid())
-  email                  String    @unique
+  id                     String        @id @default(uuid())
+  email                  String        @unique
   passwordHash           String
   fullName               String
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
   last_login_at          DateTime?
-  is_verified            Boolean   @default(false)
+  is_verified            Boolean       @default(false)
   verification_token     String?
   reset_password_token   String?
   reset_password_expires DateTime?
+  phone_numbers          PhoneNumber[]
   Agent                  Agent[]
+}
+
+model PhoneNumber {
+  id        String   @id @default(uuid())
+  number    String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // TODO: Workspaces
@@ -87,7 +96,7 @@ model AgentConfiguration {
   voice_speed                       Float
   voice_similarity_boost            Float
   fetch_initiation_webhook_url      String?
-  post_call_webhook_url             String? 
+  post_call_webhook_url             String?
   concurrent_calls_limit            Int
   daily_calls_limit                 Int
   turn_timeout_seconds              Int
