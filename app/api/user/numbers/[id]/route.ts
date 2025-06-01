@@ -16,6 +16,34 @@ export async function PATCH(
         { status: 400 }
       );
     }
+    const existingNumber = await prisma.phoneNumber.findFirst({
+      where: {
+        id: numberId,
+      },
+    });
+
+    if (!existingNumber) {
+      return Response.json({ error: "Number not found" }, { status: 404 });
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/twilio/phoneNumbers/link-agent`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          phoneNumberSid: existingNumber.sid,
+          agentId,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      return Response.json(
+        { error: "Failed to link number to agent" },
+        { status: 500 }
+      );
+    }
+
     const updatedNumber = await prisma.phoneNumber.update({
       where: { id: numberId },
       data: { agentId },
@@ -38,6 +66,33 @@ export async function DELETE(
       return Response.json({ error: "Number ID is required" }, { status: 400 });
     }
 
+    const existingNumber = await prisma.phoneNumber.findFirst({
+      where: {
+        id: numberId,
+      },
+    });
+
+    if (!existingNumber) {
+      return Response.json({ error: "Number not found" }, { status: 404 });
+    }
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/twilio/phoneNumbers/release-number`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({
+          phoneNumberSid: existingNumber.sid,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      return Response.json(
+        { error: "Failed to release number" },
+        { status: 500 }
+      );
+    }
+
     const deletedNumber = await prisma.phoneNumber.delete({
       where: {
         id: numberId,
@@ -50,6 +105,9 @@ export async function DELETE(
     });
   } catch (error: any) {
     console.error("Failed to delete phone number:", error);
-    return Response.json({ error: "Failed to delete phone number" }, { status: 500 });
+    return Response.json(
+      { error: "Failed to delete phone number" },
+      { status: 500 }
+    );
   }
 }
