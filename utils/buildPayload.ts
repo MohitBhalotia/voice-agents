@@ -30,47 +30,22 @@ interface AgentConfiguration {
 
 export const buildDeepgramPayload = (config: AgentConfiguration) => {
   return {
-    type: "Settings",
-    audio: {
-      input: {
-        encoding: "mulaw",
-        sample_rate: 8000,
-      },
-      output: {
-        encoding: "mulaw",
-        sample_rate: 8000,
-        container: "none",
-      },
-    },
-    agent: {
-      language: config.agent_language.toLowerCase(),
-      listen: {
-        provider: {
-          type: "deepgram" as const,
-          model: "nova-3",
-          keyterms: ["hello", "goodbye"]
-        },
-      },
-      think: {
-        provider: {
-          type: "open_ai" as const,
-          model: "gpt-4o-mini",
-          temperature: config.temperature,
-        },
-        prompt: config.systemPrompt,
-      },
-      speak: {
-        provider: {
-          type: "deepgram" as const,
-          model: "aura-2-thalia-en",
-          //   voice_id: config.voiceId,
-          //   stability: config.voice_stability,
-          //   speed: config.voice_speed,
-          //   similarity_boost: config.voice_similarity_boost,
-        },
-      },
-      greeting: config.firstMessage,
-    },
+    agent_language: config.agent_language.toLowerCase(),
+    listen_provider_type: "deepgram" as const,
+    listen_provider_model: "nova-3",
+    listen_provider_keyterms: ["hello", "goodbye"],
+    think_provider_type: "open_ai" as const,
+    think_provider_model: "gpt-4o-mini",
+    think_temperature: config.temperature,
+    systemPrompt: config.systemPrompt,
+    speak_provider_type: "deepgram" as const,
+    speak_provider_model: "aura-2-thalia-en",
+    use_rag: config.use_rag,
+    //   voice_id: config.voiceId,
+    //   stability: config.voice_stability,
+    //   speed: config.voice_speed,
+    //   similarity_boost: config.voice_similarity_boost,
+    greeting: config.firstMessage,
   };
   // llm: {
   //   provider: "openai",

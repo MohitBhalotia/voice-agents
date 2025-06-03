@@ -4,9 +4,9 @@ import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { llm_model } from "@prisma/client";
 import { agent_language } from "@prisma/client";
-import axios from "axios";
-import { getCookies } from "@/utils/getCookies";
-import { verifyJWTToken } from "@/lib/auth";
+// import axios from "axios";
+// import { getCookies } from "@/utils/getCookies";
+// import { verifyJWTToken } from "@/lib/auth";
 import { buildDeepgramPayload } from "@/utils/buildPayload";
 // Create the validation schema
 const configureAgentSchema = z.object({
