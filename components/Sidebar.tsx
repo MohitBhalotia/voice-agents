@@ -13,7 +13,7 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   SpeakerWaveIcon,
-  UserCircleIcon,
+  // UserCircleIcon,
   Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   MagnifyingGlassIcon,
-  FunnelIcon,
   ChartBarIcon,
   ClockIcon,
   UserGroupIcon,
@@ -333,7 +332,7 @@ export default function DashboardPage() {
                       <p className="mt-2 text-base text-gray-400">
                         {agent.description}
                       </p>
-                      <div className="mt-4 space-y-2">
+                      {/* <div className="mt-4 space-y-2">
                         {agent.lastActive && (
                           <p className="text-xs text-gray-500">
                             Last active:{" "}
@@ -350,7 +349,7 @@ export default function DashboardPage() {
                             Success rate: {agent.successRate.toFixed(1)}%
                           </p>
                         )}
-                      </div>
+                      </div> */}
                       <div className="mt-6 flex justify-between items-center">
                         <Link
                           href={`/agents/${agent.id}`}
