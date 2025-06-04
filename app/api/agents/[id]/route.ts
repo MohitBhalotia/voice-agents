@@ -108,17 +108,12 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request) {
   try {
-    // const token = await getCookies();
-    // if (!token) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
-    // const payload = await verifyJWTToken(token);
-    const agentId = await params.id;
+    // Parse agentId from the URL
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const agentId = pathParts[pathParts.length - 1];
 
     if (!agentId) {
       return NextResponse.json(
