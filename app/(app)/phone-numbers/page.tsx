@@ -70,7 +70,7 @@ export default function PhoneNumbersPage() {
       fetchPhoneNumbers();
       fetchAgents();
     }
-  }, [authLoading, user?.id,fetchAgents,fetchPhoneNumbers]);
+  }, [authLoading, user?.id]);
 
   const handleDelete = async (id: string) => {
     if (!user?.id) return;

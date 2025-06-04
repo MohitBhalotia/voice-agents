@@ -93,10 +93,10 @@ export default function AgentConfigPage() {
 
       toast.success("Agent configuration saved!");
       router.push("/agents/my-agents");
-    } catch (err: any) {
+    } catch (err) {
       console.log(err);
 
-      toast.error(err.message || "Error saving configuration");
+      toast.error( "Error saving configuration");
     } finally {
       setLoading(false);
     }
