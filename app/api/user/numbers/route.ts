@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const response = await fetch("http://localhost:3000/api/twilio/phoneNumbers/buy-number", {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/twilio/phoneNumbers/buy-number`, {
       method: "POST",
       body: JSON.stringify({ number }),
       headers: {
