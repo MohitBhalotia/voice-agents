@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { Globe, Phone, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -49,7 +49,7 @@ export default function AddPhoneNumberPage() {
       setLocalNumbers(data.availablePhoneNumberLocal || []);
       setTollFreeNumbers(data.availablePhoneNumberTollFree || []);
     } catch (error) {
-      console.error("Failed to fetch phone numbers");
+      console.error(`Failed to fetch phone numbers, ${error}`);
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export default function AddPhoneNumberPage() {
       }
     } catch (error) {
       toast.error("Failed to purchase number");
-      console.error("Failed to purchase number");
+      console.error(`Failed to purchase number, ${error}`);
     }
   };
 

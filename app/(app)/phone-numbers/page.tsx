@@ -41,7 +41,7 @@ export default function PhoneNumbersPage() {
       const data = await response.json();
       setAgents(data.agents || []);
     } catch (error) {
-      console.error("Failed to fetch agents");
+      console.error(`Failed to fetch agents, ${error}`);
     }
   };
 
@@ -59,7 +59,7 @@ export default function PhoneNumbersPage() {
         setPhoneNumbers(data.phoneNumbers);
       }
     } catch (error) {
-      console.error("Failed to fetch phone numbers");
+      console.error(`Failed to fetch phone numbers, ${error}`);
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ export default function PhoneNumbersPage() {
       fetchPhoneNumbers();
       fetchAgents();
     }
-  }, [authLoading, user?.id]);
+  }, [authLoading, user?.id,fetchAgents,fetchPhoneNumbers]);
 
   const handleDelete = async (id: string) => {
     if (!user?.id) return;
@@ -89,7 +89,7 @@ export default function PhoneNumbersPage() {
         console.error("Failed to delete phone number");
       }
     } catch (error) {
-      console.error("Failed to delete phone number");
+      console.error(`Failed to delete phone number, ${error}`);
     }
   };
 
@@ -123,7 +123,7 @@ export default function PhoneNumbersPage() {
         console.error("Failed to update agent");
       }
     } catch (error) {
-      console.error("Failed to update agent");
+      console.error(`Failed to update agent, ${error}`);
     }
   };
 

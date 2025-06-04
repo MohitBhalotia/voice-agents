@@ -47,7 +47,7 @@ const MyAgentsPage = () => {
         const data = await response.json();
         setAgents(data.agents);
       } catch (err) {
-        setError("Failed to load agents");
+        setError(`Failed to load agents, ${err}`);
         toast.error("Failed to load agents");
       } finally {
         setLoading(false);

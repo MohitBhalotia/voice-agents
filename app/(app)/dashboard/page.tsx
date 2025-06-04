@@ -14,7 +14,7 @@ interface Agent {
   id: string;
   name: string;
   description: string;
-  isActive: Boolean;
+  isActive: boolean;
   createdAt: string;
   // lastActive?: string;
   // totalInteractions?: number;
@@ -29,7 +29,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, loading: authloading } = useAuth();
+  const { user  } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,7 +87,7 @@ export default function DashboardPage() {
           averageSuccessRate: 0,
         });
       } catch (error) {
-        setError("Failed to load agents. Please try again later.");
+        setError(`Failed to load agents. Please try again later. ${error}`);
       } finally {
         setLoading(false);
       }

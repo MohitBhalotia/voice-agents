@@ -11,7 +11,8 @@ const TABS = ["Agent", "Voice", "Analysis", "Security", "Advanced", "Widget"];
 const initialForm = {
   agent_language: "EN",
   firstMessage: "Hello, how can I help you?",
-  systemPrompt: "You are a helpful voice assistant created by Deepgram. Your responses should be friendly, human-like, and conversational. Always keep your answers concise, limited to 1-2 sentences and no more than 120 characters.When responding to a user's message, follow these guidelines:- If the user's message is empty, respond with an empty message.- Ask follow-up questions to engage the user, but only one question at a time.- Keep your responses unique and avoid repetition.- If a question is unclear or ambiguous, ask for clarification before answering.- If asked about your well-being, provide a brief response about how you're feeling.Remember that you have a voice interface. You can listen and speak, and all your responses will be spoken aloud.",
+  systemPrompt:
+    "You are a helpful voice assistant created by Deepgram. Your responses should be friendly, human-like, and conversational. Always keep your answers concise, limited to 1-2 sentences and no more than 120 characters.When responding to a user's message, follow these guidelines:- If the user's message is empty, respond with an empty message.- Ask follow-up questions to engage the user, but only one question at a time.- Keep your responses unique and avoid repetition.- If a question is unclear or ambiguous, ask for clarification before answering.- If asked about your well-being, provide a brief response about how you're feeling.Remember that you have a voice interface. You can listen and speak, and all your responses will be spoken aloud.",
   llmModel: "OPENAI_GPT_4O_MINI",
   temperature: 0.7,
   tokenLimit: 4096,
@@ -44,11 +45,18 @@ export default function AgentConfigPage() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const { user, loading: authLoading, error } = useAuth();
-  const handleChange = (e: any) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    const { name, value, type } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]:
+        type === "checkbox" && e.target instanceof HTMLInputElement
+          ? e.target.checked
+          : value,
     }));
   };
 
@@ -59,7 +67,7 @@ export default function AgentConfigPage() {
     }));
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     try {
@@ -79,7 +87,7 @@ export default function AgentConfigPage() {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok)
         throw new Error(data.error || "Failed to save configuration");
 
@@ -87,7 +95,7 @@ export default function AgentConfigPage() {
       router.push("/agents/my-agents");
     } catch (err: any) {
       console.log(err);
-      
+
       toast.error(err.message || "Error saving configuration");
     } finally {
       setLoading(false);

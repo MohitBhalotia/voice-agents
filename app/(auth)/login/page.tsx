@@ -30,7 +30,7 @@ export default function LoginPage() {
       }
       else setMsg(data.error);
     } catch (error) {
-      setMsg("An error occurred. Please try again.");
+      setMsg(`An error occurred. Please try again. ${error}`);
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +52,7 @@ export default function LoginPage() {
           Welcome back
         </h2>
         <p className="mt-2 text-center text-sm text-gray-400">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link
             href="/register"
             className="font-medium text-blue-500 hover:text-blue-400 transition-colors"
