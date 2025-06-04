@@ -67,7 +67,7 @@ export async function POST(req: Request) {
     }
 
     // Create or update agent configuration
-    const { userId, agentId, ...updatableFields } = validatedData;
+    const { agentId, ...updatableFields } = validatedData;
 
     const configuration = await prisma.agentConfiguration.upsert({
       where: { agentId },
@@ -126,7 +126,7 @@ export async function GET(
         { status: 400 }
       );
     }
-    
+
     // Check if agent exists and belongs to the user
     const agent = await prisma.agent.findFirst({
       where: {
@@ -154,10 +154,10 @@ export async function GET(
         { status: 404 }
       );
     }
-    const config=buildDeepgramPayload(configuration)
-    return NextResponse.json( config );
-  } catch (error) {
-    console.error("Error fetching agent configuration:", error);
+    const config = buildDeepgramPayload(configuration);
+    return NextResponse.json(config);
+  } catch {
+    console.error("Error fetching agent configuration:");
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

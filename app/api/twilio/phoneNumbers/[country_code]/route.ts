@@ -10,10 +10,10 @@ export async function GET(
   );
 
   console.log(params.country_code);
-  
-  let availablePhoneNumberLocal = await client
+
+  const availablePhoneNumberLocal = await client
     .availablePhoneNumbers(params.country_code)
-    .local.list({ voiceEnabled: true,limit:10 });
+    .local.list({ voiceEnabled: true, limit: 10 });
 
   const availablePhoneNumberTollFree = await client
     .availablePhoneNumbers(params.country_code)

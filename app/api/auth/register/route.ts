@@ -20,9 +20,12 @@ export async function POST(req: Request) {
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: 'Invalid or missing JSON body' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid or missing JSON body" },
+        { status: 400 }
+      );
     }
-    
+
     const { email, password, fullName } = userSchema.parse(body); // Validate input
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -36,7 +39,7 @@ export async function POST(req: Request) {
     const passwordHash = await bcrypt.hash(password, 10);
     const verification_token = crypto.randomBytes(32).toString("hex");
 
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         email,
         fullName,

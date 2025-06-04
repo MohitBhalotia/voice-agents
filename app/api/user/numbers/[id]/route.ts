@@ -50,7 +50,7 @@ export async function PATCH(
     });
 
     return Response.json({ updatedNumber });
-  } catch (error) {
+  } catch (error: unknown) {
     return Response.json({ error: "Failed to update number" }, { status: 500 });
   }
 }
@@ -103,7 +103,7 @@ export async function DELETE(
       message: "Phone number deleted successfully",
       data: deletedNumber,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to delete phone number:", error);
     return Response.json(
       { error: "Failed to delete phone number" },
