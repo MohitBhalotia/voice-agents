@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const agentId = params.id;
+export async function POST(req: Request) {
+  const url = new URL(req.url);
+  const pathParts = url.pathname.split("/");
+  const agentId = pathParts[pathParts.length - 1];
 
   const agent = await prisma.agent.findUnique({
     where: { id: agentId },
