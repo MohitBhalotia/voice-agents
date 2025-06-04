@@ -29,7 +29,7 @@ export default function VerifyPage() {
         if (res.ok) {
           setTimeout(() => router.push("/login"), 3000);
         }
-      } catch (error) {
+      } catch {
         setMessage("An error occurred while verifying your email");
       } finally {
         setIsLoading(false);

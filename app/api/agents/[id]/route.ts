@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     // Create or update agent configuration
     const { agentId, ...updatableFields } = validatedData;
 
-    const configuration = await prisma.agentConfiguration.upsert({
+    await prisma.agentConfiguration.upsert({
       where: { agentId },
       update: updatableFields,
       create: {

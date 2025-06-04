@@ -32,10 +32,10 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       setMsg(data.message || data.error);
-      
+
       if (res.ok) setTimeout(() => router.push("/login"), 2000);
       toast.success(data.message);
-    } catch (error) {
+    } catch {
       setMsg("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
