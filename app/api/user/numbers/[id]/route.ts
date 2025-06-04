@@ -1,13 +1,12 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest) {
   try {
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const numberId = pathParts[pathParts.length - 1];
     const data = await req.json();
-    const numberId = params.id;
     const agentId = data.agentId;
 
     if (!numberId || !agentId) {
@@ -55,12 +54,11 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: NextRequest) {
   try {
-    const numberId = params.id;
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/");
+    const numberId = pathParts[pathParts.length - 1];
 
     if (!numberId) {
       return Response.json({ error: "Number ID is required" }, { status: 400 });
