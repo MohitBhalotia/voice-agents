@@ -125,7 +125,7 @@ model KnowledgeSource {
   agentId          String
   name             String
   sourceType       source_type
-  originalFileName String
+  originalFileName String?
   storagePath      String
   status           status
   uploaded_at      DateTime    @default(now())
