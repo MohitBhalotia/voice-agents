@@ -135,21 +135,32 @@ model KnowledgeSource {
 }
 
 model CallLog {
-  id              String           @id @default(uuid())
-  agentId         String
-  startTime       DateTime
-  endTime         DateTime?
-  durationSeconds Int?
-  status          String // 'active', 'completed', 'failed'
-  agent           Agent            @relation(fields: [agentId], references: [id])
-  transcripts     CallTranscript[]
+  id                   String           @id @default(uuid())
+  agentId              String
+  user_id              String
+  sessionId            String
+  startTime            DateTime
+  endTime              DateTime?
+  direction            String // 'inbound' or 'outbound'
+  durationSeconds      Int
+  status               String // 'active', 'completed', 'failed'
+  callerId             String?
+  disposition          String?
+  audio_recording_path String?
+  // cost                Float?
+  metadata             Json?
+  agent                Agent            @relation(fields: [agentId], references: [id])
+  transcripts          CallTranscript[]
 }
 
 model CallTranscript {
-  id          String   @id @default(uuid())
-  callLogId   String
-  speaker     String // 'user' or 'agent'
-  messageText String
-  timestamp   DateTime @default(now())
-  callLog     CallLog  @relation(fields: [callLogId], references: [id])
+  id               String   @id @default(uuid())
+  callLogId        String
+  speaker          String // 'user' or 'agent'
+  messageText      String
+  timestamp        DateTime
+  confidence_score Float?
+  sentiment_score  Float?
+  is_pii_redacted  Boolean  @default(false)
+  callLog          CallLog  @relation(fields: [callLogId], references: [id])
 }
