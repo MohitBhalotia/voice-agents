@@ -55,16 +55,15 @@ export async function POST(req: Request) {
 
     // Validate the incoming data
     const validatedData = conversationSchema.parse(data);
-    const user_id = req.headers.get("user-id");
-    // Create the call log
-    if (!user_id) {
-      return NextResponse.json(
-        {
-          error: "User ID is required",
-        },
-        { status: 400 }
-      );
-    }
+    const user = await prisma.agent.findUnique({
+      where: {
+        id: validatedData.agent_id,
+      },
+      select: {
+        userId: true,
+      },
+    });
+    const user_id = user?.userId;
     const callLogData: Prisma.CallLogCreateInput = {
       id: validatedData.id,
       agent: {
