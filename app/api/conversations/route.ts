@@ -157,19 +157,26 @@ export async function GET(req: Request) {
       where: {
         user_id: user_id,
       },
-      //     include: {
-      //       transcripts: {
-      //         orderBy: {
-      //           timestamp: "asc",
-      //         },
-      //       },
-      //     },
-      //     orderBy: {
-      //       [queryParams.sortBy]: queryParams.sortOrder,
-      //     },
-      //     skip,
-      //     take: queryParams.limit,
+      include: {
+        transcripts: {
+          orderBy: {
+            timestamp: "asc",
+          },
+        },
+      },
     });
+    //   orderBy: {
+    //   //         orderBy: {
+    //   //           timestamp: "asc",
+    //   //         },
+    //   //       },
+    //   //     },
+    //   //     orderBy: {
+    //   //       [queryParams.sortBy]: queryParams.sortOrder,
+    //   //     },
+    //   //     skip,
+    //   //     take: queryParams.limit,
+    // });
     //   prisma.callLog.count({
     //     where: {
     //       user_id: user_id,
@@ -181,9 +188,8 @@ export async function GET(req: Request) {
     // const hasNextPage = queryParams.page < totalPages;
     // const hasPreviousPage = queryParams.page > 1;
 
-    return NextResponse.json(
-      callLogs
-      //   pagination: {
+    return NextResponse.json({callLogs});
+    //   pagination: {
       //     // currentPage: queryParams.page,
       //     // totalPages,
       //     // totalItems: total,
@@ -191,7 +197,7 @@ export async function GET(req: Request) {
       //     // hasNextPage,
       //     // hasPreviousPage,
       //   },
-    );
+
   } catch (error) {
     console.error("Error fetching call logs:", error);
 
