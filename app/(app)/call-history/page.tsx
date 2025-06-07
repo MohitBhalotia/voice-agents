@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -41,6 +41,54 @@ interface CallLog {
   }[];
 }
 
+// Add this component at the top of the file, before the CallHistory component
+const AudioVisualizer = ({ isPlaying }: { isPlaying: boolean }) => {
+  const [heights, setHeights] = useState<number[]>([20, 20, 20, 20]);
+  const animationRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (isPlaying) {
+      let time = 0;
+      const animate = () => {
+        time += 0.1;
+        setHeights((prevHeights) =>
+          prevHeights.map((_, i) => {
+            // Create a wave effect using sine waves with different phases
+            const wave = Math.sin(time + i * 0.5) * 30;
+            return Math.max(20, Math.min(80, 50 + wave));
+          })
+        );
+        animationRef.current = requestAnimationFrame(animate);
+      };
+      animationRef.current = requestAnimationFrame(animate);
+    } else {
+      setHeights([20, 20, 20, 20]);
+    }
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPlaying]);
+
+  return (
+    <div className="flex items-center gap-1 h-8">
+      {heights.map((height, i) => (
+        <div
+          key={i}
+          className="w-1 bg-blue-500 rounded-full transition-all duration-100"
+          style={{
+            height: `${height}%`,
+            opacity: isPlaying ? 1 : 0.5,
+            transform: `scaleY(${isPlaying ? 1 : 0.8})`,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 export default function CallHistory() {
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +99,7 @@ export default function CallHistory() {
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(
     null
   );
+  const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [metadataDialog, setMetadataDialog] = useState<{
     open: boolean;
     metadata: any;
@@ -87,21 +136,96 @@ export default function CallHistory() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const handlePlayAudio = (audioPath: string) => {
+  const handlePlayAudio = async (audioPath: string, callId: string) => {
+    try {
+      // If clicking the same call's play button
+      if (currentCallId === callId) {
+        if (isPlaying && currentAudio) {
+          currentAudio.pause();
+          setIsPlaying(false);
+        } else if (currentAudio) {
+          await currentAudio.play();
+          setIsPlaying(true);
+        }
+        return;
+      }
+
+      // If playing a different call
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+
+      // Create new audio element
+      const audio = new Audio();
+
+      // Add event listeners before setting source
+      audio.addEventListener("ended", () => {
+        setIsPlaying(false);
+        setCurrentCallId(null);
+      });
+
+      audio.addEventListener("pause", () => {
+        setIsPlaying(false);
+      });
+
+      audio.addEventListener("play", () => {
+        setIsPlaying(true);
+      });
+
+      audio.addEventListener("error", (e) => {
+        console.error("Audio playback error:", e);
+        setIsPlaying(false);
+        setCurrentCallId(null);
+        // You might want to show an error message to the user here
+      });
+
+      // Set the source and load the audio
+      audio.src = audioPath;
+      await audio.load();
+
+      // Start playing
+      await audio.play();
+      setCurrentAudio(audio);
+      setCurrentCallId(callId);
+      setIsPlaying(true);
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      setIsPlaying(false);
+      setCurrentCallId(null);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  const handleDownload = (audioPath: string) => {
+    try {
+      // Open the audio in a new tab
+      window.open(audioPath, "_blank");
+    } catch (error) {
+      console.error("Error opening audio:", error);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  // Cleanup audio on component unmount
+  useEffect(() => {
+    return () => {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio.src = ""; // Clear the source
+      }
+    };
+  }, [currentAudio]);
+
+  const handleCloseDetails = () => {
     if (currentAudio) {
       currentAudio.pause();
       currentAudio.currentTime = 0;
     }
-
-    const audio = new Audio(`/api/audio/${audioPath}`);
-    audio.play();
-    setCurrentAudio(audio);
-    setIsPlaying(true);
-
-    audio.onended = () => {
-      setIsPlaying(false);
-      setCurrentAudio(null);
-    };
+    setIsPlaying(false);
+    setCurrentCallId(null);
+    setSelectedCall(null);
   };
 
   const filteredCalls = callLogs.filter(
@@ -215,33 +339,60 @@ export default function CallHistory() {
 
           {selectedCall && (
             <div className="md:col-span-2 bg-gray-800 rounded-xl p-6 relative">
-              <button
-                className="absolute top-6 right-28 bg-gray-700 hover:bg-gray-600 p-2 rounded-full z-20 shadow-lg"
-                onClick={() => setSelectedCall(null)}
-                title="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <h2 className="text-xl font-semibold">Call Details</h2>
                   <p className="text-gray-400">{selectedCall.sessionId}</p>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() =>
-                      handlePlayAudio(selectedCall.audio_recording_path)
-                    }
-                    className="bg-blue-600 hover:bg-blue-700 p-2 rounded-lg"
-                  >
-                    {isPlaying ? (
-                      <Pause className="h-5 w-5" />
-                    ) : (
-                      <Play className="h-5 w-5" />
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4">
+                    {isPlaying && currentCallId === selectedCall.id && (
+                      <AudioVisualizer isPlaying={isPlaying} />
                     )}
-                  </button>
-                  <button className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg">
-                    <Download className="h-5 w-5" />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() =>
+                          handlePlayAudio(
+                            selectedCall.audio_recording_path,
+                            selectedCall.id
+                          )
+                        }
+                        className="bg-blue-600 hover:bg-blue-700 p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!selectedCall.audio_recording_path}
+                        title={
+                          selectedCall.audio_recording_path
+                            ? "Play Recording"
+                            : "No Recording Available"
+                        }
+                      >
+                        {isPlaying && currentCallId === selectedCall.id ? (
+                          <Pause className="h-5 w-5" />
+                        ) : (
+                          <Play className="h-5 w-5" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleDownload(selectedCall.audio_recording_path)
+                        }
+                        className="bg-gray-700 hover:bg-gray-600 p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!selectedCall.audio_recording_path}
+                        title={
+                          selectedCall.audio_recording_path
+                            ? "Open Recording in New Tab"
+                            : "No Recording Available"
+                        }
+                      >
+                        <Download className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                  <button
+                    className="bg-gray-700 hover:bg-gray-600 p-2 rounded-full z-20 shadow-lg"
+                    onClick={handleCloseDetails}
+                    title="Close"
+                  >
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
               </div>
