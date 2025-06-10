@@ -30,7 +30,7 @@ const conversationSchema = z.object({
   //   message_count: z.number(),
   status: z.string(),
   //   call_successful: z.string(),
-  summary: z.any(),
+  summary: z.record(z.unknown()),
   recording_sid: z.string(),
   conversation_history: z.array(conversationMessageSchema),
   to_number: z.string(),
@@ -90,28 +90,30 @@ export async function POST(req: Request) {
     });
 
     // Wrap Cloudinary upload in a Promise
-    const uploadResult = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          resource_type: "video", // audio/mp3 is uploaded as video
-          folder: "twilio_recordings",
-          public_id: validatedData.recording_sid,
-          format: "mp3",
-        },
-        (error, result) => {
-          if (error) {
-            console.error("Cloudinary upload error:", error);
-            reject(new Error("Failed to upload recording to Cloudinary"));
+    const uploadResult = await new Promise<{ secure_url: string }>(
+      (resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: "video", // audio/mp3 is uploaded as video
+            folder: "twilio_recordings",
+            public_id: validatedData.recording_sid,
+            format: "mp3",
+          },
+          (error, result) => {
+            if (error) {
+              console.error("Cloudinary upload error:", error);
+              reject(new Error("Failed to upload recording to Cloudinary"));
+            }
+            resolve(result as { secure_url: string });
           }
-          resolve(result);
-        }
-      );
+        );
 
-      // Write the recording data to the upload stream
-      uploadStream.end(recordingResponse.data);
-    });
+        // Write the recording data to the upload stream
+        uploadStream.end(recordingResponse.data);
+      }
+    );
 
-    const audioRecordingPath = (uploadResult as any)?.secure_url;
+    const audioRecordingPath = uploadResult.secure_url;
 
     const callLogData: Prisma.CallLogCreateInput = {
       id: validatedData.id,
@@ -129,7 +131,7 @@ export async function POST(req: Request) {
       status: validatedData.status,
       callerId: validatedData.from_number,
       audio_recording_path: audioRecordingPath || validatedData.recording_sid,
-      metadata: validatedData.summary,
+      metadata: validatedData.summary as Prisma.InputJsonValue,
     };
 
     const callLog = await prisma.callLog.create({

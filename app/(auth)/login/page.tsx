@@ -23,14 +23,17 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
         credentials: "include",
       });
+
       const data = await res.json();
-      
-      if (data.status === 200) {        
+
+      if (res.ok) {
         router.push("/dashboard");
+      } else {
+        setMsg(data.error || "Login failed");
       }
-      else setMsg(data.error);
     } catch (error) {
-      setMsg(`An error occurred. Please try again. ${error}`);
+      console.error("Login error:", error);
+      setMsg("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Upload, Link as LinkIcon, Bot } from "lucide-react";
 import { source_type } from "@prisma/client";
@@ -29,13 +29,8 @@ export default function AddKnowledgeBasePage() {
       router.push("/login");
     }
   }, [authLoading, user, router]);
-  useEffect(() => {
-    if (user) {
-      fetchAgents();
-    }
-  }, [user]);
 
-  const fetchAgents = async () => {
+  const fetchAgents = useCallback(async () => {
     try {
       const response = await fetch("/api/agents/my-agents", {
         headers: {
@@ -45,16 +40,17 @@ export default function AddKnowledgeBasePage() {
 
       if (!response.ok) throw new Error("Failed to fetch agents");
       const data = await response.json();
-      console.log(data);
-
       setAgents(data.agents);
-    //   if (data.agents.length > 0) {
-    //     setSelectedAgentId(data.agents[0].id);
-    //   }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch agents");
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchAgents();
+    }
+  }, [user, fetchAgents]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

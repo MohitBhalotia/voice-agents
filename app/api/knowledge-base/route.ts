@@ -32,24 +32,10 @@ const uploadSchema = z
     }
   );
 
-// Validation schema for GET request
-const getSchema = z.object({
-  agentId: z.string().uuid(),
-});
-
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    // const { searchParams } = new URL(req.url);
-    // const agentId = searchParams.get("agentId");
-
-    // Validate input
-    // const validatedData = getSchema.parse({ agentId });
-
     // Fetch all knowledge sources for the agent
     const knowledgeSources = await prisma.knowledgeSource.findMany({
-      // where: {
-      //   agentId: validatedData.agentId,
-      // },
       orderBy: {
         uploaded_at: "desc",
       },

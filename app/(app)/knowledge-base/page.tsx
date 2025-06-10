@@ -30,7 +30,7 @@ interface KnowledgeSource {
   status: status;
   uploaded_at: string;
   last_indexed_at: string | null;
-  metadata: any | null;
+  metadata: Record<string, unknown> | null;
   agent: Agent;
 }
 
@@ -243,8 +243,8 @@ export default function KnowledgeBasePage() {
                 Delete Knowledge Source
               </h3>
               <p className="text-gray-300 mb-6">
-                Are you sure you want to delete "{selectedSource.name}"? This
-                action cannot be undone.
+                Are you sure you want to delete &quot;{selectedSource.name}
+                &quot;? This action cannot be undone.
               </p>
               <div className="flex justify-end space-x-4">
                 <button

@@ -7,8 +7,7 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { getCookies } from "@/utils/getCookies";
-import { verifyJWTToken } from "@/lib/auth";
+
 interface User {
   id: string;
   email: string;
@@ -28,39 +27,42 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // ✅ loading should start as true
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-
     const verifyToken = async () => {
-
       try {
-        const token=await getCookies();
+        const response = await fetch("/api/auth/verify", {
+          credentials: "include",
+        });
 
-        if (!token) {
-          setUser(null);
-          setLoading(false);
-          return;
+        if (!response.ok) {
+          throw new Error("Authentication failed");
         }
 
-        const payload=await verifyJWTToken(token);
+        const data = await response.json();
+        console.log("User data:", data);
 
-        setUser({
-          id: payload.id as string,
-          email: payload.email as string,
-        });
+        if (data.user) {
+          setUser({
+            id: data.user.id,
+            email: data.user.email,
+          });
+        } else {
+          setUser(null);
+        }
       } catch (err) {
-        
+        console.error("Auth error:", err);
         setError(err instanceof Error ? err.message : "Authentication failed");
         setUser(null);
       } finally {
-        setLoading(false); 
+        setLoading(false);
       }
     };
 
     verifyToken();
-  }, []); 
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, error }}>

@@ -24,7 +24,7 @@ const MyAgentsPage = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  console.log("user",user);
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");

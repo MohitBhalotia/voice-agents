@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Plus, Phone, Trash2, Edit2, Check, X, Link2 } from "lucide-react";
 import { useAuth } from "@/app/contexts/AuthContext";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,7 @@ export default function PhoneNumbersPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const fetchAgents = async () => {
+  const fetchAgents = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -43,9 +43,9 @@ export default function PhoneNumbersPage() {
     } catch (error) {
       console.error(`Failed to fetch agents, ${error}`);
     }
-  };
+  }, [user?.id]);
 
-  const fetchPhoneNumbers = async () => {
+  const fetchPhoneNumbers = useCallback(async () => {
     if (!user?.id) return;
 
     try {
@@ -63,14 +63,14 @@ export default function PhoneNumbersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!authLoading && user?.id) {
       fetchPhoneNumbers();
       fetchAgents();
     }
-  }, [authLoading, user?.id]);
+  }, [authLoading, user?.id, fetchPhoneNumbers, fetchAgents]);
 
   const handleDelete = async (id: string) => {
     if (!user?.id) return;

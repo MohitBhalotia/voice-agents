@@ -17,7 +17,8 @@ export async function POST(req: Request) {
     // Safely parse JSON body
     try {
       body = await req.json();
-    } catch {
+    } catch (error) {
+      console.error("JSON parse error:", error);
       return NextResponse.json(
         { error: "Invalid or missing JSON body" },
         { status: 400 }
@@ -31,6 +32,7 @@ export async function POST(req: Request) {
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user || !user.is_verified) {
+      console.error("User not found or unverified:", email);
       return NextResponse.json(
         { error: "Invalid credentials or unverified" },
         { status: 401 }
@@ -40,11 +42,13 @@ export async function POST(req: Request) {
     // Check password
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
+      console.error("Invalid password for user:", email);
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       );
     }
+
     // Sign JWT token
     const token = await signToken({ id: user.id, email: user.email });
     await prisma.user.update({
@@ -53,18 +57,25 @@ export async function POST(req: Request) {
     });
 
     // Create NextResponse and set cookie
-    const res = NextResponse.json({ message: "Login successful", status: 200 });
+    const res = NextResponse.json(
+      { message: "Login successful" },
+      { status: 200 }
+    );
 
+    // Set cookie with more permissive settings for Docker environment
     res.cookies.set("token", token, {
       httpOnly: true,
       path: "/",
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
       maxAge: 60 * 60 * 24 * 7, // 1 week
+      domain: "localhost", // Explicitly set domain for localhost
     });
 
+    // console.log("Login successful for user:", email);
     return res;
   } catch (error) {
+    console.error("Login error:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: error.errors.map((e) => e.message).join(", ") },

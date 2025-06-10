@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Phone,
   Clock,
-  Calendar,
-  User,
   ArrowUpRight,
   ArrowDownLeft,
   Search,
@@ -15,8 +13,6 @@ import {
   Download,
   Play,
   Pause,
-  Volume2,
-  VolumeX,
   Info,
   X,
 } from "lucide-react";
@@ -32,7 +28,7 @@ interface CallLog {
   status: string;
   callerId: string;
   audio_recording_path: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
   transcripts: {
     id: string;
     speaker: string;
@@ -102,17 +98,11 @@ export default function CallHistory() {
   const [currentCallId, setCurrentCallId] = useState<string | null>(null);
   const [metadataDialog, setMetadataDialog] = useState<{
     open: boolean;
-    metadata: any;
+    metadata: Record<string, unknown>;
   } | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      fetchCallLogs();
-    }
-  }, [user]);
-
-  const fetchCallLogs = async () => {
+  const fetchCallLogs = useCallback(async () => {
     try {
       const response = await fetch("/api/conversations", {
         headers: {
@@ -121,14 +111,19 @@ export default function CallHistory() {
       });
       if (!response.ok) throw new Error("Failed to fetch call logs");
       const data = await response.json();
-      //   console.log(data.callLogs);
       setCallLogs(data.callLogs);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCallLogs();
+    }
+  }, [user, fetchCallLogs]);
 
   const formatDuration = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);

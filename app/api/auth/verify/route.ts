@@ -1,20 +1,20 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { NextResponse } from "next/server";
+import { verifyJWTToken } from "@/lib/auth";
+import { cookies } from "next/headers";
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const token = searchParams.get('token');
+export async function GET() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
 
-  const user = await prisma.user.findFirst({ where: { verification_token: token  } });
-  if (!user) return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
+    if (!token) {
+      return NextResponse.json({ error: "No token found" }, { status: 401 });
+    }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      is_verified: true,
-      verification_token: null,
-    },
-  });
-
-  return NextResponse.json({ message: 'Email verified successfully!' });
+    const payload = await verifyJWTToken(token);
+    return NextResponse.json({ user: payload });
+  } catch (error) {
+    console.error("Token verification error:", error);
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
 }
